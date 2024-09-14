@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompted Inspiration</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 50px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .card-title {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">Prompted Inspiration</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/history">History</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/insights">Insights</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">Prompted Inspiration</h1>
+                <form id="quote-form">
+                    <div class="form-group">
+                        <label for="phone_number">Phone Number:</label>
+                        <input type="number" class="form-control" id="phone_number" name="phone_number" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="question">Question:</label>
+                        <textarea class="form-control" id="question" name="question" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="frequency">Frequency (minutes):</label>
+                        <input type="number" class="form-control" id="frequency" name="frequency" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="count">Count:</label>
+                        <input type="number" class="form-control" id="count" name="count" min="1" value="1">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Generate Quote</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">History</h2>
+                <button id="history-btn" class="btn btn-primary">Show History</button>
+                <pre id="history" class="mt-3"></pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">My Insights</h2>
+                <button id="insights-btn" class="btn btn-primary">Show Insights</button>
+                <pre id="insights" class="mt-3"></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById("quote-form").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {
+                phone_number: parseInt(formData.get("phone_number"), 10),  // Ensure integer conversion
+                question: formData.get("question"),
+                frequency: parseInt(formData.get("frequency"), 10),
+                count: parseInt(formData.get("count"), 10)
+            };
+
+            try {
+                const response = await fetch("/save-and-generate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                alert(`Quote Generated: ${result.quote}`);
+            } catch (error) {
+                alert("Error generating quote: " + error.message);
+            }
+        });
+
+        document.getElementById("insights-btn").addEventListener("click", async function() {
+            const phone_number = document.getElementById("phone_number").value;
+            if (phone_number) {
+                try {
+                    const response = await fetch(`/my-insights/${phone_number}`);
+                    const result = await response.json();
+                    document.getElementById("insights").innerText = JSON.stringify(result.insights, null, 2);
+                } catch (error) {
+                    document.getElementById("insights").innerText = "Error: " + error.message;
+                }
+            } else {
+                alert("Please enter a phone number first.");
+            }
+        });
+
+        document.getElementById("history-btn").addEventListener("click", async function() {
+            const phone_number = document.getElementById("phone_number").value;
+            if (phone_number) {
+                try {
+                    const response = await fetch(`/user-history/${phone_number}`);
+                    const result = await response.json();
+                    document.getElementById("history").innerText = JSON.stringify(result.history, null, 2);
+                } catch (error) {
+                    document.getElementById("history").innerText = "Error: " + error.message;
+                }
+            } else {
+                alert("Please enter a phone number first.");
+            }
+        });
+    </script>
+</body>
+</html>
